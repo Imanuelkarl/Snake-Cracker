@@ -1,6 +1,5 @@
 package com.realgames.wormattack;
 import android.content.*;
-import android.opengl.*;
 import android.graphics.*;
 import android.content.res.*;
 
@@ -14,6 +13,7 @@ public class Sprite
 	float width;
 	float radius;
 	float height;
+	Batch mybatch;
 	PointF end=new PointF();
 	PointF center= new PointF();
 	PointF origin= new PointF();
@@ -21,6 +21,8 @@ public class Sprite
 	Canvas canvas;
 	int bitrow,bitcolumn,bitpad,n,m;
 	RectF rect = new RectF();
+	Rect tsize=new Rect();
+	Batch batch;
 	public Sprite(){
 		paint= new Paint();
 		space=new CollisionRect();
@@ -112,12 +114,20 @@ public class Sprite
 		bitpad=pad;
 		n=positionX;
 		m=positionY;
+		tsize=new Rect(n*bits.getWidth()/bitcolumn+bitpad,m*bits.getHeight()/bitrow+bitpad,(n+1)*bits.getWidth()/bitcolumn-bitpad,(m+1)*bits.getHeight()/bitrow-bitpad);
+	}
+	public Rect getSize(){
+		tsize=new Rect(n*bits.getWidth()/bitcolumn+bitpad,m*bits.getHeight()/bitrow+bitpad,(n+1)*bits.getWidth()/bitcolumn-bitpad,(m+1)*bits.getHeight()/bitrow-bitpad);
+		return tsize;
 	}
 	public void setWidth(float width){
 		this.width=width;
 	}
 	public void setHeight(float height){
 		this.height=height;
+	}
+	public Bitmap getTexture(){
+		return bits;
 	}
 	public float getCenterX(){
 		
@@ -126,12 +136,24 @@ public class Sprite
 	public float getCenterY(){
 		return center.y;
 	}
+	public Paint getPaint(){
+		return paint;
+	}
 	public void draw(Canvas canvas){
 		this.canvas=canvas;
 		
 		canvas.drawRect(center.x-width/2,center.y-height/2,center.x+width/2,center.y+height/2,paint);
 	}
+	public void drawBatch(Batch batvh){
+		this.batch=batvh;
+	}
+	
 	public void put(Canvas canvas){
+		this.canvas=canvas;
+		if(batch!=null){
+			batch.drawSprite(this);
+		}
+		else{
 		if(bits!=null){
 			Rect size = new Rect(n*bits.getWidth()/bitcolumn+bitpad,m*bits.getHeight()/bitrow+bitpad,(n+1)*bits.getWidth()/bitcolumn-bitpad,(m+1)*bits.getHeight()/bitrow-bitpad);
 			rect = new RectF(center.x-width/2,center.y-height/2,center.x+width/2,center.y+height/2);
@@ -141,10 +163,17 @@ public class Sprite
 		else{
 			draw(canvas);
 		}
-		this.canvas=canvas;
+	
+		}
 	}
 	public void putCircle(Canvas canvas){
-		canvas.drawCircle(getCenterX(),getCenterY(),radius,paint);
+		this.canvas=canvas;
+		if(batch!=null){
+			batch.drawCircle(this);
+		}
+		else{
+			canvas.drawCircle(getCenterX(),getCenterY(),radius,paint);
+		}
 	}
 	public Canvas getCanvas(){
 		return canvas;

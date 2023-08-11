@@ -54,10 +54,14 @@ public class Game extends View
 	private ArrayList<Float> datas=new ArrayList<>();
 	private SharedPreferences sp;
 	private float initialTouchX;
+	private Camera camera;
+	private Batch batch;
 	private Bitmap pausebg,playtexture,hometexture,restarttexture;
 	private Sprite homebtn,playbtn,restart,pauseBack;
 	boolean isOver;
 	private int fact;
+	private int crow;
+	private boolean isMoving;
 	public Game(Context context){
 		super(context);
 		cont=context;
@@ -85,6 +89,10 @@ public class Game extends View
 		rows=5*level+10;
 		rendering=false;
 		pause=false;
+		camera=new Camera(this);
+		batch=new Batch();
+		crow=blck.size();
+		isMoving=false;
 	}
 	public void saveTo(SharedPreferences sp){
 		this.sp =sp;
@@ -96,6 +104,7 @@ public class Game extends View
 	}
 	private WinBody createWinBody(int n){
 		WinBody winbody=new WinBody();
+		winbody.drawBatch(batch);
 		Paint pp=new Paint();
 		float blockY=-getMeasuredWidth()/2;
 		float blockX=(n+1)*getMeasuredWidth()/10+n*getMeasuredWidth()/10;
@@ -169,7 +178,7 @@ public class Game extends View
 	}
 	private Row createRow(){
 		Row row = new Row();
-		row.setRowY(0-blockdim/2);
+		row.setRowY(0-blockdim*(2*crow));
 		if(blck.size()==0){
 			for(int i=0;i<5;i++){
 				Block boll= new Block();
@@ -235,6 +244,7 @@ public class Game extends View
 	}
 	private void createSnake(){
 		paint.setColor(Color.CYAN);
+		snake.drawBatch(batch);
 		snake.setRadius(rad);
 		snake.setPaint(paint);
 		snake.setCenter(getMeasuredWidth()/2,getMeasuredHeight()/2);
@@ -246,6 +256,10 @@ public class Game extends View
 	
 		//onCreate
 		if(!gameStarted){
+			camera=new Camera(this);
+			batch=new Batch();
+			camera.setup(0,0,getWidth(),getHeight());
+			batch.setupCamera(camera);
 			sp.edit().putString("mode","level").commit();
 			pausebtn.setCenter(getMeasuredWidth()-55,55);
 			pausebtn.setTexture(btn);
@@ -275,10 +289,13 @@ public class Game extends View
 			if(sp.contains("hs")){
 				highscore=Integer.parseInt(sp.getString("hs",""));
 			}
+			isMoving=true;
 		}
 		
 		//render method
 		if(rendering){
+			
+			batch.setupCamera(camera);
 			paint.setColor(Color.BLACK);
 			canvas.drawPaint(paint);
 			if(time%2500==0){
@@ -290,6 +307,10 @@ public class Game extends View
 			time++;
 			paint.setColor(Color.CYAN);
 			snake.putCircle(canvas);
+			
+			
+			
+			
 			if(time<60){
 				if(snake.getBody().size()<5){
 					if(time%12==0){
@@ -297,9 +318,16 @@ public class Game extends View
 					}
 				}
 			}
-			if(blck.size()!=0)
-				if(blck.get(0).isMoving())
-					snake.adjust(5);
+			else{
+				if(isMoving){
+					camera.translate(0,-speed*fact);
+					snake.setCenterY(snake.getCenterY()-speed*fact);
+				}
+				
+				snake.move();
+				
+			}
+			
 					
 			if(time>60){
 				
@@ -321,7 +349,9 @@ public class Game extends View
 					}
 				}
 				else{
-					makegame();
+					if(blck.size()<15){
+						makegame();
+					}
 				}
 			}
 			if(snake.getCenterY()+snake.getHeight()/2>endLineTop){
@@ -331,16 +361,19 @@ public class Game extends View
 			for(int i=0;i<blck.size();i++){
 				blck.get(i).playOn(canvas);
 				if(blck.get(i).isMoving()){
-					blck.get(i).setRowY(blck.get(i).getRowY()+speed*fact);
+					blck.get(i).setRowY(blck.get(i).getRowY()+0);
 				}
 				if(blck.get(i).getRowY()>getMeasuredHeight()+blockdim){
+					blck.remove(i);
+				}
+				if(camera.getStartY()+camera.getHeight()<blck.get(i).getRowY()-blockdim){
 					blck.remove(i);
 				}
 			}
 			
 			
 				datas.add(snake.getCenterX());
-				snake.move(datas);
+				
 			
 			
 			for(Row roww:blck){
@@ -466,6 +499,7 @@ public class Game extends View
 	}
 	private Block createBlock(int n){
 		Block blk = new Block();
+		blk.drawBatch(batch);
 		int posX,posY;
 		posX=getRandom(0,4);
 		posY=getRandom(0,1);
@@ -481,6 +515,7 @@ public class Game extends View
 	}
 	private Line createLine(int n){
 		Line line = new Line();
+		line.drawBatch(batch);
 		Paint pol=new Paint();
 		pol.setColor(Color.WHITE);
 		float lineX=(n+1)*getMeasuredWidth()/10+n*getMeasuredWidth()/10+blockdim/2;
@@ -511,7 +546,7 @@ public class Game extends View
 	}
 	private void makegame(){
 		if(blck.size()!=0){
-			if(create%(blockdim/speed)==0){
+			if(create%(2)==0){
 				if(blck.size()==1||blck.size()==2||blck.size()==3||blck.size()==4){
 					key=false;
 				}
@@ -521,6 +556,7 @@ public class Game extends View
 						rows.noBlock(true);
 						key=true;
 						blck.add(rows);
+						crow++;
 					}
 				}
 				else{
@@ -528,6 +564,7 @@ public class Game extends View
 					rows.noBlock(false);
 					key=false;
 					blck.add(rows);
+					crow++;
 				}
 					madeRows++;
 			}
@@ -538,6 +575,7 @@ public class Game extends View
 		}
 		else{
 			blck.add(createRow());
+			crow++;
 			create+=1*fact;
 			key=false;
 		}
@@ -633,12 +671,16 @@ public class Game extends View
 	
 	private void keepMoving(){
 		for(Row roes:blck){
+			isMoving=true;
 			roes.setMoving(true);
+			fact=1;
 		}
 	}
 	public void stopMoving(){
 		for(Row rows:blck){
+			isMoving=false;
 			rows.setMoving(false);
+			fact=0;
 		}
 	}
 }

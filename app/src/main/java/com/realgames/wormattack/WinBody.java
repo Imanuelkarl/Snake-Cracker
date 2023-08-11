@@ -29,7 +29,7 @@ public class WinBody extends Sprite
 		super.putCircle(canvas);
 		paint.setTextSize(radius);
 		paint.setColor(Color.WHITE);
-		canvas.drawText(number+score,getCenterX()-5,getCenterY()-40,paint);
+		batch.drawText(canvas,number+score,getCenterX()-5,getCenterY()-40,radius,paint);
 		this.collider.top=this.getCenterY()-this.getHeight()/2;
 		this.collider.left=this.getCenterX()-this.getWidth()/2;
 		this.collider.bottom=this.getCenterY()+this.getHeight()/2;

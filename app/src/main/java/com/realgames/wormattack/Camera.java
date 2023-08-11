@@ -1,22 +1,52 @@
 package com.realgames.wormattack;
 import android.renderscript.*;
+import android.view.*;
+import org.apache.http.conn.util.*;
 
 public class Camera
 {
+	public Camera(View view){
+		this.view=view;
+		this.width=view.getWidth();
+		this.height=view.getHeight();
+		position=new Float3();
+		direction=new Float3();
+	}
+	public View view;
 	public Float3 position;
 	public Float3 direction;
-	float startX,startY;
+	float startX=0,startY=0;
 	float endX,endY;
 	float width,height;
 	public Camera(){
 		position=new Float3();
 		direction=new Float3();
 	}
+
+	public void setStartX(float startX)
+	{
+		this.startX = startX;
+	}
+
+	public float getStartX()
+	{
+		return startX;
+	}
+
+	public void setStartY(float startY)
+	{
+		this.startY = startY;
+	}
+
+	public float getStartY()
+	{
+		return startY;
+	}
 	public void setWidth(float width)
 	{
 		this.width = width;
 	}
-
+	
 	public float getWidth()
 	{
 		return width;
@@ -45,6 +75,8 @@ public class Camera
 		
 	}
 	public void translate(float x,float y){
+		startX+=x;
+		startY+=y;
 		position.x=x;
 		position.y=y;
 	}

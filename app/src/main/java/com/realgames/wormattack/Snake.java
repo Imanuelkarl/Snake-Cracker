@@ -1,5 +1,6 @@
 package com.realgames.wormattack;
 import java.util.*;
+
 import android.graphics.*;
 public class Snake extends Sprite
 {
@@ -8,7 +9,9 @@ public class Snake extends Sprite
 	private String num="";
 	private int stime;
 	private boolean right;
+	private float space=0;
 	int id;
+	int i=0;
 	private boolean left;
 	private ArrayList<Float> data=new ArrayList<>();
 	private CollisionRect collider = new CollisionRect();
@@ -36,6 +39,14 @@ public class Snake extends Sprite
 		stime++;
 	}
 
+	@Override
+	public void setCenterY(float y)
+	{
+		// TODO: Implement this method
+		space=getCenterY()-y;
+		super.setCenterY(y);
+	}
+	
 	@Override
 	public void setCenterX(float x)
 	{
@@ -66,7 +77,26 @@ public class Snake extends Sprite
 			super.setCenterX(x);
 		}
 	}
-	
+	public void adjuster(int time,int speed){
+		float newer=this.getCenterX();
+		float init;
+		float newery=this.getCenterY();
+		float inity;
+		if(i<body.size()){
+			if(time%1==0){
+				init=body.get(i).getCenterX();
+				inity=body.get(i).getCenterY();
+				body.get(i).setCenterX(newer);
+				body.get(i).setCenterY(newery);
+				newer = init;
+				newery=inity;
+				i++;
+			}
+		}
+		else{
+			i=0;
+		}
+	}
 	public void stopLeft(boolean xyes){
 		left=xyes;
 	}
@@ -82,6 +112,7 @@ public class Snake extends Sprite
 	public void addBody(int amount){
 		for(int i=0;i<amount;i++){
 			Sprite bod = new Sprite();
+			bod.drawBatch(batch);
 			bod.setRadius(radius);
 			float x=getCenterX();
 			if(body.size()!=0){
@@ -95,7 +126,7 @@ public class Snake extends Sprite
 	}
 	public void removeBody(){
 		if(body.size()!=0){
-			body.remove(body.get(body.size()-1));
+			body.remove(body.get(0));
 		}
 		else{
 			isAlive=false;
@@ -111,15 +142,16 @@ public class Snake extends Sprite
 		num=""+body.size();
 		tp.setTextSize(radius);
 		tp.setColor(Color.WHITE);
-		canvas.drawText(num,getCenterX()-5,getCenterY()-40,tp);
+		batch.drawText(canvas,num,this.getCenterX()-5,this.getCenterY()-40,radius,tp);
 		for(int i=0;i<body.size();i++){
-			body.get(i).putCircle(canvas);
-			if(i<body.size()-1){
+			
+			if(i+1<body.size()){
 				float pack=body.get(i).getCenterX()-body.get(i+1).getCenterX();
 				if(Math.abs(pack)>radius*2){
-			
+					
 				}
 			}
+			body.get(i).putCircle(canvas);
 			
 		}
 		if(body.size()!=0){
@@ -135,8 +167,8 @@ public class Snake extends Sprite
 		return body;
 	}
 	public void move(ArrayList<Float> data){
-		for(int k=0;k<data.size();k++){
-		float newer=data.get(k);
+	
+		float newer=this.getCenterX();
 		float init;
 		float yco=0;
 		for(int i=0;i<body.size();i++){
@@ -158,8 +190,24 @@ public class Snake extends Sprite
 			newer = init;
 		}
 		}
-	}
+	public void move(){
+		
+		float newer=this.getCenterX();
+		float init;
+		float newery=this.getCenterY();
+		float inity;
+		for(int i=0;i<body.size();i++){
+			init=body.get(i).getCenterX();
+			inity=body.get(i).getCenterY();
+			body.get(i).setCenterX(newer);
+			body.get(i).setCenterY(newery);
+			newer = init;
+			newery=inity;
+		}
 
+	}
+	
+	
 	public void move(int g){
 		move(data);
 	}
